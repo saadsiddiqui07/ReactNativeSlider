@@ -21,7 +21,7 @@ import Animated, {
 import { _height, _itemSize, _spacing, _width } from "@/constants/values";
 
 const AnimatedText = Animated.createAnimatedComponent(TextInput);
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 
 const AnimatedInputText = ({
   value,
@@ -53,9 +53,9 @@ const Item = ({ index }: { index: number }) => {
   return (
     <View
       style={{
-        width: 1,
+        width: _width,
         height: _height,
-        backgroundColor: "black",
+        backgroundColor: "lightgray",
       }}
     />
   );
@@ -83,22 +83,23 @@ const SliderScreen = () => {
         alignItems: "center",
       }}
     >
+      {/* This styling is temporary not for prod usage */}
       <View
         style={{
-          alignSelf: "center",
           position: "absolute",
           justifyContent: "center",
           alignItems: "center",
           zIndex: 1,
-          gap: _spacing,
+          top: height / 2 - 20,
         }}
       >
-        <AntDesign name="caretdown" color={"royalblue"} size={22} />
+        <AntDesign name="caretdown" color={"black"} size={22} />
         <View
           style={{
-            height: _height,
             width: _width,
-            backgroundColor: "royalblue",
+            height: _height + 5,
+            backgroundColor: "black",
+            zIndex: 1,
           }}
         />
       </View>
