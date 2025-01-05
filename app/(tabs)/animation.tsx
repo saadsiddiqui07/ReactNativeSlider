@@ -1,26 +1,67 @@
-import { Dimensions, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import {
+  Dimensions,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TextStyle,
+  View,
+  ViewStyle,
+} from "react-native";
 import React from "react";
 import { AntDesign } from "@expo/vector-icons";
 import Animated, {
   clamp,
+  SharedValue,
+  useAnimatedProps,
   useAnimatedScrollHandler,
   useSharedValue,
 } from "react-native-reanimated";
 
+const AnimatedText = Animated.createAnimatedComponent(TextInput);
 const { width } = Dimensions.get("window");
 
-const _spacing = 8;
+const _spacing = 12;
 const _height = 40;
 const _width = 1;
 const _itemSize = _spacing + _width;
 
-const Item = ({ index }: { index: number }) => {
+const AnimatedInputText = ({
+  value,
+  style,
+}: {
+  value: SharedValue<number>;
+  style?: TextStyle;
+}) => {
+  const animatedProps = useAnimatedProps(() => {
+    return {
+      value: String(Math.floor(value.value)),
+    };
+  });
   return (
-    <View style={{ width: 1, height: _height, backgroundColor: "black" }} />
+    <AnimatedText
+      animatedProps={animatedProps}
+      underlineColorAndroid={"transparent"}
+      editable={false}
+      defaultValue={String(value.value)}
+      style={[{ fontSize: 24, fontWeight: "600", textAlign: "center" }, style]}
+    />
   );
 };
 
-const animation = () => {
+const Item = ({ index }: { index: number }) => {
+  return (
+    <View
+      style={{
+        width: 1,
+        height: _height,
+        backgroundColor: "black",
+      }}
+    />
+  );
+};
+
+const SliderScreen = () => {
   const data = [...Array(80).keys()];
   const scrollX = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler({
@@ -38,7 +79,7 @@ const animation = () => {
         flex: 1,
         backgroundColor: "white",
         justifyContent: "center",
-        alignContent: "center",
+        alignItems: "center",
       }}
     >
       <View
@@ -54,12 +95,13 @@ const animation = () => {
         <AntDesign name="caretdown" color={"royalblue"} size={20} />
         <View
           style={{
-            height: _height,
+            height: _height + 10,
             width: _width,
             backgroundColor: "royalblue",
           }}
         />
       </View>
+      <AnimatedInputText value={scrollX} />
       <Animated.FlatList
         data={data}
         onScroll={onScroll}
@@ -79,6 +121,6 @@ const animation = () => {
   );
 };
 
-export default animation;
+export default SliderScreen;
 
 const styles = StyleSheet.create({});
