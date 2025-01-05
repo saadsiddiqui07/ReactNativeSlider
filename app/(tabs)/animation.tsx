@@ -1,30 +1,27 @@
 import {
   Dimensions,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   SafeAreaView,
-  StyleSheet,
-  Text,
-  TextInput,
   TextStyle,
   View,
-  ViewStyle,
+  FlatList,
+  TextInput,
+  TextInputProps,
 } from "react-native";
-import React from "react";
+import React, { useCallback } from "react";
 import { AntDesign } from "@expo/vector-icons";
 import Animated, {
-  clamp,
+  AnimatedProps,
   SharedValue,
   useAnimatedProps,
-  useAnimatedScrollHandler,
   useSharedValue,
+  withTiming,
 } from "react-native-reanimated";
+import { _height, _itemSize, _spacing, _width } from "@/constants/values";
 
 const AnimatedText = Animated.createAnimatedComponent(TextInput);
 const { width } = Dimensions.get("window");
-
-const _spacing = 12;
-const _height = 40;
-const _width = 1;
-const _itemSize = _spacing + _width;
 
 const AnimatedInputText = ({
   value,
@@ -34,16 +31,19 @@ const AnimatedInputText = ({
   style?: TextStyle;
 }) => {
   const animatedProps = useAnimatedProps(() => {
+    const roundedValue = Math.round(value.value);
     return {
-      value: String(Math.floor(value.value)),
+      text: roundedValue.toString(),
     };
   });
+
   return (
     <AnimatedText
-      animatedProps={animatedProps}
       underlineColorAndroid={"transparent"}
       editable={false}
-      defaultValue={String(value.value)}
+      defaultValue={"1"}
+      value={undefined} // Set to undefined to use animatedProps
+      animatedProps={animatedProps as Partial<AnimatedProps<TextInputProps>>}
       style={[{ fontSize: 24, fontWeight: "600", textAlign: "center" }, style]}
     />
   );
@@ -63,16 +63,17 @@ const Item = ({ index }: { index: number }) => {
 
 const SliderScreen = () => {
   const data = [...Array(80).keys()];
-  const scrollX = useSharedValue(0);
-  const onScroll = useAnimatedScrollHandler({
-    onScroll: (e) => {
-      scrollX.value = clamp(e.contentOffset.x / _itemSize, 0, data.length - 1);
-      console.log(scrollX.value);
+  const rangeValue = useSharedValue(0);
+
+  const handleFlatlistScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const scrollOffset = event.nativeEvent.contentOffset.x;
+      const val = Math.round(scrollOffset / _itemSize) + 1;
+      rangeValue.value = withTiming(val); // Smoothly animate the value update
     },
-    onMomentumEnd: () => {
-      console.log("Momentum ended");
-    },
-  });
+    []
+  );
+
   return (
     <SafeAreaView
       style={{
@@ -89,38 +90,39 @@ const SliderScreen = () => {
           justifyContent: "center",
           alignItems: "center",
           zIndex: 1,
-          gap: _spacing * 3,
+          gap: _spacing,
         }}
       >
-        <AntDesign name="caretdown" color={"royalblue"} size={20} />
+        <AntDesign name="caretdown" color={"royalblue"} size={22} />
         <View
           style={{
-            height: _height + 10,
+            height: _height,
             width: _width,
             backgroundColor: "royalblue",
           }}
         />
       </View>
-      <AnimatedInputText value={scrollX} />
-      <Animated.FlatList
-        data={data}
-        onScroll={onScroll}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        keyExtractor={(index) => String(index)}
-        snapToInterval={_itemSize}
-        contentContainerStyle={{
-          gap: _spacing,
-          alignItems: "center",
-          paddingHorizontal: width / 2 - _width / 2,
-        }}
-        renderItem={({ item, index }) => <Item index={index} />}
-        scrollEventThrottle={16}
-      />
+      <AnimatedInputText value={rangeValue} />
+      <View style={{ height: 200 }}>
+        <FlatList
+          data={data}
+          onScroll={handleFlatlistScroll}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          keyExtractor={(item, index) => String(index)}
+          snapToInterval={_itemSize}
+          decelerationRate={"normal"}
+          contentContainerStyle={{
+            gap: _spacing,
+            alignItems: "center",
+            paddingHorizontal: width / 2 - _width / 2,
+          }}
+          renderItem={({ item, index }) => <Item index={index} />}
+          scrollEventThrottle={16}
+        />
+      </View>
     </SafeAreaView>
   );
 };
 
 export default SliderScreen;
-
-const styles = StyleSheet.create({});
